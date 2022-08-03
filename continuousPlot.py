@@ -2,7 +2,6 @@ import time
 import spidev
 from pynput import keyboard
 import matplotlib.pyplot as plt
-import numpy
 
 spi1 = spidev.SpiDev(1, 0)
 spi1.max_speed_hz = 5000000 # Guessing from the datasheet max sck freq
@@ -39,11 +38,7 @@ def make_plot():
     ax.plot(xar, yar)
     plt.show()
 
-def read_adc(adc_ch, vref = 3.3):
-    # Make sure ASC channel is 0 or 1:
-    if adc_ch != 0:
-        adc_ch = 1
-
+def read_adc():
     reply = spi1.xfer2([0]*4)
 
     # Construct single integer out of the reply (2 bytes)
@@ -84,7 +79,7 @@ try:
     count = 0
 
     while not stop:
-        adc_0 = read_adc(0)
+        adc_0 = read_adc()
         print(adc_0, "degrees C")
 
         strout = str(count) + ',' + str(adc_0) + '\n'
