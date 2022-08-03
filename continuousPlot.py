@@ -1,3 +1,12 @@
+####################################################################################
+# Firmware for HotPi board
+# Allows a Raspberry Pi 4b to control 6 MAX31855 thermocouple-to-digital converters
+# Records temperature data from the spi device to a file, then graphs it
+# First, enable spi1 on the Raspberry Pi
+####################################################################################
+
+# TODO: Support all 6 thermocouples being used in parallel instead of just 1
+
 import time
 import spidev
 from pynput import keyboard
