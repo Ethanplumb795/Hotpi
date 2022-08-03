@@ -21,14 +21,23 @@ def on_press(key):
         print()
 
 def make_plot():
+    xar = []
+    yar = []
+
     dataFile = open("temperatureData.csv", "r")
     data = dataFile.read()
     dataFile.close()
-    print(data)
+    data_array = data.split('\n')
 
-    x = []
-    y = []
-    ax.plot(x, y)
+    for each_line in data_array:
+        if len(each_line) > 1 and len(each_line) < 20:
+            x,y = each_line.split(',')
+            xar.append(int(x))
+            yar.append(float(y))
+
+    ax.clear()
+    ax.plot(xar, yar)
+    plt.show()
 
 def read_adc(adc_ch, vref = 3.3):
     # Make sure ASC channel is 0 or 1:
@@ -78,7 +87,7 @@ try:
         adc_0 = read_adc(0)
         print(adc_0, "degrees C")
 
-        strout = str(count) + ' ' + str(adc_0) + '\n'
+        strout = str(count) + ',' + str(adc_0) + '\n'
         f = open("temperatureData.csv", "a")
         f.write(strout)
         f.close()
