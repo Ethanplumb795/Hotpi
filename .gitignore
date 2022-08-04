@@ -1,3 +1,5 @@
 venv
 *.txt
 *.csv
+# Protecting secrets:
+vmeasure.py
