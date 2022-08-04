@@ -1,32 +1,26 @@
 ####################################################################################
 # Firmware for HotPi board
 # Allows a Raspberry Pi 4b to control 6 MAX31855 thermocouple-to-digital converters
-# Records temperature data and graphs it simultaneously
-# Enable spi1 on the Raspberry Pi before use
+# Records temperature data from the spi device to a file, then graphs it
+# First, enable spi1 on the Raspberry Pi
 ####################################################################################
 
 # TODO: Support all 6 thermocouples being used in parallel instead of just 1
 
-# Imports
 import time
 import spidev
 from pynput import keyboard
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-import psutil
 
+spi1 = spidev.SpiDev(1, 0)
+spi1.max_speed_hz = 5000000 # Guessing from the datasheet max sck freq
+spi1.bits_per_word = 8
 
-# Init variables
-
+global stop
 stop = False
-count = 0
 
-# Init plot
 fig = plt.figure()
-ax = plt.subplot()
-
-
-# Function Definitions
+ax = fig.add_subplot(1,1,1)
 
 def on_press(key):
     global stop
@@ -37,11 +31,9 @@ def on_press(key):
     except AttributeError:
         print('\nspecial key {0} pressed\n'.format(key))
 
-def update_plot(frame):
+def make_plot():
     xar = []
     yar = []
-
-    read_temp()
 
     dataFile = open("temperatureData.csv", "r")
     data = dataFile.read()
@@ -54,11 +46,11 @@ def update_plot(frame):
             xar.append(int(x))
             yar.append(float(y))
 
-    ax.cla()
+    ax.clear()
     ax.plot(xar, yar)
+    plt.show()
 
 def read_adc():
-    global count
     reply = spi1.xfer2([0]*4)
 
     # Construct single integer out of the reply (2 bytes)
@@ -83,41 +75,36 @@ def read_adc():
 
     return temp
 
-def read_temp():
-    global count
-
-    adc_0 = read_adc()
-    print(adc_0, "degrees C")
-
-    strout = str(count) + ',' + str(adc_0) + '\n'
-    f = open("temperatureData.csv", "a")
-    f.write(strout)
-    f.close()
-
-    count += 1
-
-
-# Begin "main":
-
-# Init spi
-spi1 = spidev.SpiDev(1, 0)
-spi1.max_speed_hz = 5000000 # Guessing from the datasheet max sck freq
-spi1.bits_per_word = 8
-
 # Create the keyboard listener thread
 listener = keyboard.Listener( on_press=on_press )
 listener.start()
 
+# Report the channel 0 and channel 1 voltages to the terminal
 try:
     print("Writing to temperatureData.csv")
+    print("Press 'q' to quit")
 
     f = open("temperatureData.csv", "w")
-    f.write(time.strftime("%a, %d %b %Y %H:%M:%S +0000\n", time.gmtime()))
+    f.write(time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime()))
     f.close()
 
-    ani = FuncAnimation(fig, update_plot, interval=1000)
+    count = 0
 
-    plt.show()
+    while not stop:
+        adc_0 = read_adc()
+        print(adc_0, "degrees C")
+
+        strout = str(count) + ',' + str(adc_0) + '\n'
+        f = open("temperatureData.csv", "a")
+        f.write(strout)
+        f.close()
+
+        count += 1
+
+        if not stop:
+            time.sleep(1)
+
+    make_plot()
 
 finally:
     spi1.close()
