@@ -1,0 +1,50 @@
+{% extends "bootstrap/base.html" %}
+
+{% block styles %}
+{{super()}}
+<link rel="stylesheet"
+      href="../static/css/style.css">
+{% endblock %}
+
+{% block title %}
+    {% if title %}{{ title }} - Skyfox{% else %}Welcome to the SkyFox Interface{% endif %}
+
+{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-default">
+
+        <div class="container">
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <div class="nav navbar-nav" style="display:flex; justify-content: space-between;align-items: center">
+
+                    <img src="/static/keysight_logo_full.svg" alt="keysight logo" style="height:80px;align-self: center;justify-self: left">
+                    <div style="display:flex; align-items: center;justify-self: right">
+                        <a class="navbar-brand left-right-title-padding" href="{{ url_for('index') }}" style="font-size: 20px;margin-left: 30px">SkyFox Home</a>
+
+                        <a class="navbar-brand left-right-title-padding" href="{{ url_for('setupMeasurement') }}"  style="font-size: 20px; margin-left: 30px">Setup New Measurement</a>
+                    </div>
+
+
+                </div>
+            </div>
+
+        </div>
+    </nav>
+{% endblock %}
+
+
+{% block content %}
+    <div class="container">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-info" role="alert">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {# application content needs to be provided in the app_content block #}
+            {% block app_content %}{% endblock %}
+        </div>
+{% endblock %}
