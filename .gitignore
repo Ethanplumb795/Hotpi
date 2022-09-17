@@ -1,7 +1,13 @@
 venv
 *.txt
 *.csv
+
 hotpid/target/
 hotpid/release/
+
+hotpid/Cargo.lock
+**/*.rs.bk
+hotpid/*.pdb
+
 # Protecting secrets:
 vmeasure.py
