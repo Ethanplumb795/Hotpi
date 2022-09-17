@@ -1,5 +1,7 @@
 venv
 *.txt
 *.csv
+hotpid/target/
+hotpid/release/
 # Protecting secrets:
 vmeasure.py
