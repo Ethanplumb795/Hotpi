@@ -1,14 +1,12 @@
-use rppal::spi;
+use std::error::Error;
 
-fn main() {
-    let spi0 = spi::Spi {
-        bus: spi::Bus::Spi0,
-        slave_select: spi::SlaveSelect::Ss0,
-        clock_speed: 5000000,
-        mode: spi::Mode::Mode0,
-    };
+use rppal::spi::{Bus, Mode, SlaveSelect, Spi};
+use rppal::system::DeviceInfo;
 
-    let mut buf: [u8; 16] = [0; 16];
+fn main() -> Result<(), Box<dyn Error>> {
+    let spi = Spi::new(Bus::Spi0, SlaveSelect::Ss0, 16_000_000, Mode::Mode0)?;
 
-    spi0.read(&mut buf);
+    println!("Testing SPI on a {}.", DeviceInfo::new()?.model());
+
+    Ok(())
 }
