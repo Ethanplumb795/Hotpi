@@ -3,6 +3,7 @@
 //       Number of averages
 //       Start Time
 //       Save to CSV
+// Later: Initiate measurement experiment from a skeletonized flask web app
 
 use std::error::Error;
 
