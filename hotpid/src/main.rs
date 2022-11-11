@@ -2,6 +2,7 @@
 //       Duration
 //       Number of averages
 //       Start Time
+//       Save to CSV
 
 use std::error::Error;
 
