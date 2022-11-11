@@ -1,3 +1,8 @@
+// TODO: Frequency of measurements
+//       Duration
+//       Number of averages
+//       Start Time
+
 use std::error::Error;
 
 use rppal::spi::{Bus, Mode, SlaveSelect, Spi};
