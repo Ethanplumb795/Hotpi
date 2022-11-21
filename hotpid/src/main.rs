@@ -11,7 +11,13 @@ use std::{thread, time};
 use rppal::spi::{Bus, Mode, SlaveSelect, Spi};
 use rppal::system::DeviceInfo;
 
+use std::fs::File;
+use std::io::prelude::*;
+
+use chrono::{Datelike, Timelike, Local};
+
 struct Measurement {
+    m_time: time::SystemTime,
     board: f32,
     couple: f32,
 }
@@ -67,7 +73,10 @@ fn take_measurement(spi:&Spi) -> Measurement {
         therm_temp_14 *= -1.0;
     }
 
+    let measurement_time = time::SystemTime::now();
+
     let measurement = Measurement {
+        m_time: measurement_time,
         board: therm_temp_12,
         couple: therm_temp_14,
     };
@@ -101,10 +110,14 @@ fn avg_measurement(n:u8, spi:&Spi) -> Measurement {
     }
     board_avg /= n as f32;
     couple_avg /= n as f32;
+    let measurement_time = time::SystemTime::now();
     let avg = Measurement {
+        m_time: measurement_time,
         board: board_avg,
         couple: couple_avg,
     };
+
+    println!("Time: {}", avg.m_time);
 
     // Return avg measurement
     avg
@@ -139,6 +152,16 @@ fn meas_over_time(duration:u32, freq:f32, num_avg:u8, spi:&Spi, vec:&mut Vec<Mea
     }
 }
 
+fn save_to_csv(measurement_v:&Vec<Measurement>, name:String) -> std::io::Result<()> {
+    let mut file = File::create(name)?;
+    file.write_all(b"time,couple,board\n")?;
+    //for v in measurement_v {
+        //file.write_all(
+    //}
+
+    Ok(())
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     // NOTE: in Python we used bus 1, device 0
     // Speed was 5_000_000
@@ -153,8 +176,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("\nBoard average: {}. Thermocouple average: {}.", avg_ten.board, avg_ten.couple);
 
     // Test meas_over_time()
+    let mut measurement_name = String::from("testing_measurement");
     let mut measurement_v = Vec::new();
     meas_over_time(10, 2.0, 10, &spi, &mut measurement_v);
+
+    // Test save_to_csv()
+    measurement_name.insert_str(0, "resources/");
+    save_to_csv(&measurement_v, measurement_name);
 
     Ok(())
 }
