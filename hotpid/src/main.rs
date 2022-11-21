@@ -77,6 +77,10 @@ fn take_measurement(spi:&Spi) -> Measurement {
 }
 
 fn avg_measurement(n:u8, spi:&Spi) -> Measurement {
+    if n <= 0 {
+        panic!("[ERROR] must make at least 1 measurement.");
+    }
+
     let mut board = Vec::new();
     let mut couple = Vec::new();
     let mut board_avg:f32 = 0.0;
@@ -87,7 +91,7 @@ fn avg_measurement(n:u8, spi:&Spi) -> Measurement {
         let tmp_measurement = take_measurement(&spi);
         board.push(tmp_measurement.board);
         couple.push(tmp_measurement.couple);
-        thread::sleep(time::Duration::from_millis(10));
+        //thread::sleep(time::Duration::from_millis(10));
     }
 
     // Take average of measurements
@@ -106,17 +110,32 @@ fn avg_measurement(n:u8, spi:&Spi) -> Measurement {
     avg
 }
 
-fn meas_over_time(duration:u32, freq:f32, num_avg:u8, spi:&Spi) {
+fn meas_over_time(duration:u32, freq:f32, num_avg:u8, spi:&Spi, vec:&mut Vec<Measurement>) {
     // Duration measured in seconds -> max duration = 49710.26963 days
     // freq measured in hz
-    if freq <= 0 {
+    if freq <= 0.0 {
         panic!("[ERROR] frequency must be a positive value.");
     }
+
+    // period in seconds
+    let period = time::Duration::from_secs_f32(1.0/freq);
+    vec.clear(); // Remove all elements
+
     if duration == 0 {
-        let m = take_measurement(spi);
+        vec.push(take_measurement(spi));
     }
     else {
-        // For the selected duration, set up an interrupt that will make the avg measurements
+        // For the selected duration, take avg measurement and wait the inverse of frequency
+        let mut i:u32 = 0;
+        while i < duration {
+            // Do thing
+            let new_meas = avg_measurement(num_avg, spi);
+            println!("Measurement #{}: {}", i+1, new_meas.couple);
+            vec.push(new_meas);
+            // Wait inverse of frequency
+            thread::sleep(period);
+            i += 1;
+        }
     }
 }
 
@@ -129,16 +148,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Testing rppal
     println!("Testing SPI on a {}.", DeviceInfo::new()?.model());
 
-    let temp = take_measurement(&spi);
-
-    // Test measurement
-    println!("\nFinal measurement results:");
-    println!("Board Temp: {} degrees C", temp.board);
-    println!("Thermocouple Temp: {} degrees C", temp.couple);
-
     // Test avg measurement
     let avg_ten = avg_measurement(10, &spi);
     println!("\nBoard average: {}. Thermocouple average: {}.", avg_ten.board, avg_ten.couple);
+
+    // Test meas_over_time()
+    let mut measurement_v = Vec::new();
+    meas_over_time(10, 2.0, 10, &spi, &mut measurement_v);
 
     Ok(())
 }
