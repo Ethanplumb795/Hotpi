@@ -11,13 +11,14 @@ use std::{thread, time};
 use rppal::spi::{Bus, Mode, SlaveSelect, Spi};
 use rppal::system::DeviceInfo;
 
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::prelude::*;
+use std::io::LineWriter;
 
-use chrono::{Datelike, Timelike, Local};
+use chrono::{Datelike, Timelike, Local, NaiveTime, offset};
 
 struct Measurement {
-    m_time: time::SystemTime,
+    m_time: chrono::DateTime<Local>,
     board: f32,
     couple: f32,
 }
@@ -37,7 +38,7 @@ fn take_measurement(spi:&Spi) -> Measurement {
     let scg_fault:bool = (read_buffer[3] & 0b10) == 0b10;
     let scv_fault:bool = (read_buffer[3] & 0b100) == 0b100;
     let fault:bool = (read_buffer[2] & 0b1) == 0b1;
-    if fault || oc_fault || scg_fault || scv_fault {
+    if fault && (oc_fault || scg_fault || scv_fault) {
         println!("fault:{} ocf:{} scg:{} scv:{}", fault, oc_fault, scg_fault, scv_fault);
     }
 
@@ -73,7 +74,7 @@ fn take_measurement(spi:&Spi) -> Measurement {
         therm_temp_14 *= -1.0;
     }
 
-    let measurement_time = time::SystemTime::now();
+    let measurement_time = chrono::offset::Local::now();
 
     let measurement = Measurement {
         m_time: measurement_time,
@@ -100,7 +101,7 @@ fn avg_measurement(n:u8, spi:&Spi) -> Measurement {
         let tmp_measurement = take_measurement(&spi);
         board.push(tmp_measurement.board);
         couple.push(tmp_measurement.couple);
-        //thread::sleep(time::Duration::from_millis(10));
+        //thread::sleep(time::Duration::from_millis(1));
     }
 
     // Take average of measurements
@@ -110,14 +111,14 @@ fn avg_measurement(n:u8, spi:&Spi) -> Measurement {
     }
     board_avg /= n as f32;
     couple_avg /= n as f32;
-    let measurement_time = time::SystemTime::now();
+    let measurement_time = chrono::offset::Local::now();
     let avg = Measurement {
         m_time: measurement_time,
         board: board_avg,
         couple: couple_avg,
     };
 
-    println!("Time: {}", avg.m_time);
+    println!("Time: {:?}", avg.m_time);
 
     // Return avg measurement
     avg
@@ -154,10 +155,10 @@ fn meas_over_time(duration:u32, freq:f32, num_avg:u8, spi:&Spi, vec:&mut Vec<Mea
 
 fn save_to_csv(measurement_v:&Vec<Measurement>, name:String) -> std::io::Result<()> {
     let mut file = File::create(name)?;
-    file.write_all(b"time,couple,board\n")?;
-    //for v in measurement_v {
-        //file.write_all(
-    //}
+    write!(file, "time,couple,board\n");
+    for v in measurement_v {
+        write!(file, "{:?},{},{}\n", v.m_time, v.couple, v.board);
+    }
 
     Ok(())
 }
@@ -182,7 +183,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Test save_to_csv()
     measurement_name.insert_str(0, "resources/");
+    // Still needs to create the resources directory first.
     save_to_csv(&measurement_v, measurement_name);
+
+    // Test measuring time:
+    println!("Time: {:?} using chrono::offset::Local::now()", chrono::offset::Local::now());
 
     Ok(())
 }
