@@ -1,8 +1,8 @@
-// TODO: Frequency of measurements
-//       Duration
+// TODO: Frequency of measurements: done
+//       Duration: done
 //       Number of averages: done
 //       Start Time
-//       Save to CSV
+//       Save to CSV: done
 // Later: Initiate measurement experiment from a skeletonized flask web app
 
 use std::error::Error;
@@ -11,11 +11,10 @@ use std::{thread, time};
 use rppal::spi::{Bus, Mode, SlaveSelect, Spi};
 use rppal::system::DeviceInfo;
 
-use std::fs::{self, File};
+use std::fs::File;
 use std::io::prelude::*;
-use std::io::LineWriter;
 
-use chrono::{Datelike, Timelike, Local, NaiveTime, offset};
+use chrono::Local;
 
 struct Measurement {
     m_time: chrono::DateTime<Local>,
@@ -29,7 +28,7 @@ fn take_measurement(spi:&Spi) -> Measurement {
 
     // Make a single measurement
     let transfer_result = spi.transfer(&mut read_buffer, &write_buffer);
-    let num_bytes_transferred = match transfer_result {
+    let _num_bytes_transferred = match transfer_result {
         Ok(bytes) => bytes,
         Err(error) => panic!("Problem transferring to spi: {:?}", error),
     };
@@ -155,9 +154,9 @@ fn meas_over_time(duration:u32, freq:f32, num_avg:u8, spi:&Spi, vec:&mut Vec<Mea
 
 fn save_to_csv(measurement_v:&Vec<Measurement>, name:String) -> std::io::Result<()> {
     let mut file = File::create(name)?;
-    write!(file, "time,couple,board\n");
+    write!(file, "time,couple,board\n")?;
     for v in measurement_v {
-        write!(file, "{:?},{},{}\n", v.m_time, v.couple, v.board);
+        write!(file, "{:?},{},{}\n", v.m_time, v.couple, v.board)?;
     }
 
     Ok(())
@@ -184,7 +183,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Test save_to_csv()
     measurement_name.insert_str(0, "resources/");
     // Still needs to create the resources directory first.
-    save_to_csv(&measurement_v, measurement_name);
+    save_to_csv(&measurement_v, measurement_name)?;
 
     // Test measuring time:
     println!("Time: {:?} using chrono::offset::Local::now()", chrono::offset::Local::now());

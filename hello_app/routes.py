@@ -2,13 +2,13 @@ from flask import render_template, flash, redirect
 from hello_app import app
 from hello_app.forms import SetupMeasurementForm, MissionResultsForm, MissionStartForm, GetStartedForm
 
-from SkySCPI.MeasurementControl import MeasurementControl
+#from SkySCPI.MeasurementControl import MeasurementControl
 
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 def index():
     form = GetStartedForm()
-    user = {'username': 'SkyFox User'}
+    user = {'username': 'Hotpi User'}
     if form.validate_on_submit():
         return redirect('/setup-measurement')
     return render_template('index.html', title='Home', user=user, form=form)

@@ -6,7 +6,9 @@ class GetStartedForm(FlaskForm):
     submit = SubmitField("Configure New Measurement")
 
 class SetupMeasurementForm(FlaskForm):
-    startFreq = FloatField('Start Frequency (MHz)', validators=[DataRequired(), NumberRange(min=0.03)])
+    startFreq = FloatField('Frequency (Hz)', validators=[DataRequired(), NumberRange(max=1000)])
+    duration = FloatField('Duration (Seconds)', validators=[DataRequired(), NumberRange(min=0)])
+    numAvgs = FloatField('Number of averaged measurements', validators=[DataRequired(), NumberRange(min=1)])
     stopFreq = FloatField('Stop Frequency (MHz)', validators=[DataRequired(), NumberRange(min=0.03,max=50000)])
     intBW = FloatField('Integration Bandwidth (MHz)', validators=[DataRequired(), NumberRange(min=0.001)])
     resBW = SelectField('Resolution Bandwidth', choices=[('high sense', 'High Sensitivity'), ('medium', 'Medium Sensitivity'), ('speed', 'High Speed')])
