@@ -1,9 +1,10 @@
-venv
+*venv*
 *.txt
 *.csv
 
 hotpid/target/
 hotpid/release/
+hotpid/resources/
 
 hotpid/Cargo.lock
 **/*.rs.bk
