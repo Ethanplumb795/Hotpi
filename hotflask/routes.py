@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect
-from hello_app import app
-from hello_app.forms import SetupMeasurementForm, MissionResultsForm, MissionStartForm, GetStartedForm
+from hotflask import app
+from hotflask.forms import SetupMeasurementForm, MissionResultsForm, MissionStartForm, GetStartedForm
 
 #from SkySCPI.MeasurementControl import MeasurementControl
 
@@ -18,28 +18,24 @@ def index():
 def setupMeasurement():
     form = SetupMeasurementForm()
     if form.validate_on_submit():
-        measurement_control = MeasurementControl();
-        flash('Uploading settings: Start Frequency = {}MHz, Stop Frequency = {}MHz, Integration Bandwidth = {}MHz, '
-              'Resolution Bandwidth = {}, Preamp Enabled = {}, RF Atten = {}dB, Interval = {}Hz'.format(
-            form.startFreq.data, form.stopFreq.data, form.intBW.data, form.resBW.data, form.preampEnabled.data,
-            form.rfAtten.data, form.interval.data))
+        #measurement_control = MeasurementControl();
+        flash('Uploading settings: Frequency = {}Hz, Duration = {}s, # Averaged Measurements = {}, Measurement Name = {}'.format(
+            form.measFreq.data, form.duration.data, form.numAvgs.data,
+            form.measName.data))
         measurement_setup_dictionary = {
-            "int_bw": form.intBW.data,
-            "preamp": form.preampEnabled.data,
-            "rbw": form.resBW.data,
-            "rf_atten": form.rfAtten.data,
-            "interval": form.interval.data,
-            "freq_start": form.startFreq.data,
-            "freq_stop": form.stopFreq.data}
-        # TODO add status to measurement_control
-        measurement_control(measurement_setup_dictionary)
-        measurement_control_status = True;
-        if measurement_control_status:
-            flash("Settings Successfully Updated!")
-            return redirect('/mission-start')
-        else:
-            flash("Error uploading settings; check the USB connection to the FieldFox")
-            return redirect('/setup-measurement')
+            "meas_freq": form.measFreq.data,
+            "duration": form.duration.data,
+            "num_avgs": form.numAvgs.data,
+            "meas_name": form.measName.data,
+        }
+        #measurement_control(measurement_setup_dictionary)
+        #measurement_control_status = True;
+        #if measurement_control_status:
+        #    flash("Settings Successfully Updated!")
+        #    return redirect('/mission-start')
+        #else:
+        #    flash("Error uploading settings; check the USB connection to the FieldFox")
+        #    return redirect('/setup-measurement')
     return render_template('measurement-setup.html', title='Setup Measurement', form=form)
 
 
