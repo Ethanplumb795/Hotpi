@@ -6,6 +6,8 @@ hotpid/target/
 hotpid/release/
 hotpid/resources/
 
+measurements/
+
 hotpid/Cargo.lock
 **/*.rs.bk
 hotpid/*.pdb

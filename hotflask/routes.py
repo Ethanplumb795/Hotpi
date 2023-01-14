@@ -28,6 +28,14 @@ def setupMeasurement():
             "num_avgs": form.numAvgs.data,
             "meas_name": form.measName.data,
         }
+
+        # Write to a file so Rust can execute the measurement
+        f = open("measurements/" + measurement_setup_dictionary["meas_name"] + ".csv", "w")
+        f.write(str(measurement_setup_dictionary["meas_freq"]) + ","
+                + str(measurement_setup_dictionary["num_avgs"]) + ","
+                + str(measurement_setup_dictionary["duration"]) + "\n")
+        f.close()
+
         #measurement_control(measurement_setup_dictionary)
         #measurement_control_status = True;
         #if measurement_control_status:
