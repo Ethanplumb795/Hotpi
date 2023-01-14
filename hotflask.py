@@ -1,1 +1,1 @@
-from hello_app import app
+from hotflask import app
