@@ -1,8 +1,4 @@
-// TODO: Frequency of measurements: done
-//       Duration: done
-//       Number of averages: done
-//       Start Time
-//       Save to CSV: done
+// TODO: Read measurement setup from Flask app, execute measurement
 // Later: Initiate measurement experiment from a skeletonized flask web app
 
 use std::error::Error;
@@ -11,7 +7,8 @@ use std::{thread, time};
 use rppal::spi::{Bus, Mode, SlaveSelect, Spi};
 use rppal::system::DeviceInfo;
 
-use std::fs::File;
+use std::fs;
+use std::path::{Path, PathBuf};
 use std::io::prelude::*;
 
 use chrono::Local;
@@ -153,7 +150,7 @@ fn meas_over_time(duration:u32, freq:f32, num_avg:u8, spi:&Spi, vec:&mut Vec<Mea
 }
 
 fn save_to_csv(measurement_v:&Vec<Measurement>, name:String) -> std::io::Result<()> {
-    let mut file = File::create(name)?;
+    let mut file = fs::File::create(name)?;
     write!(file, "time,couple,board\n")?;
     for v in measurement_v {
         write!(file, "{:?},{},{}\n", v.m_time, v.couple, v.board)?;
@@ -169,21 +166,43 @@ fn main() -> Result<(), Box<dyn Error>> {
     let spi = Spi::new(Bus::Spi0, SlaveSelect::Ss0, 5_000_000, Mode::Mode0)?;
 
     // Testing rppal
-    println!("Testing SPI on a {}.", DeviceInfo::new()?.model());
+    // println!("Testing SPI on a {}.", DeviceInfo::new()?.model());
 
-    // Test avg measurement
-    let avg_ten = avg_measurement(10, &spi);
-    println!("\nBoard average: {}. Thermocouple average: {}.", avg_ten.board, avg_ten.couple);
-
-    // Test meas_over_time()
-    let mut measurement_name = String::from("testing_measurement");
-    let mut measurement_v = Vec::new();
-    meas_over_time(10, 2.0, 10, &spi, &mut measurement_v);
-
-    // Test save_to_csv()
-    measurement_name.insert_str(0, "resources/");
-    // Still needs to create the resources directory first.
-    save_to_csv(&measurement_v, measurement_name)?;
+    let measurement_dir = Path::new("../measurements");
+    let wait_time = time::Duration::from_secs_f32(1.0);
+    if measurement_dir.is_dir() {
+        println!("../measurements exists");
+        loop {
+            for request in fs::read_dir(measurement_dir)? {
+                let request = request?;
+                let path = request.path();
+                let path_clone1 = path.clone();
+                let path_clone2 = path.clone();
+                if !(path.is_dir()) {
+                    println!("[Status] Executing measurement");
+                    thread::sleep(wait_time);
+                    let mut measurement_v = Vec::new();
+                    let contents = fs::read_to_string(path)
+                        .expect("Should have been able to read the file");
+                    let mut measurement_name = String::from(<&str as Into<String>>::into(path_clone1.file_name().unwrap()
+                                                            .to_str().unwrap()));
+                    let field: Vec<&str> = contents.split(",").collect();
+                    let meas_freq:f32 = field[0].parse::<f32>().unwrap();
+                    let num_avgs:u8 = field[1].parse::<u8>().unwrap();
+                    let duration:u32 = field[2].parse::<u32>().unwrap();
+                    fs::remove_file(path_clone2).expect("File delete failed");
+                    meas_over_time(duration, meas_freq, num_avgs, &spi, &mut measurement_v);
+                    measurement_name.insert_str(0, "../measurement_results/");
+                    save_to_csv(&measurement_v, measurement_name)?;
+                }
+                else {
+                    println!("[ERROR] There should exist no subdirectories in the measurement directory.\n[Status] Quitting program...");
+                    break;
+                }
+            }
+            thread::sleep(wait_time);
+        }
+    }
 
     // Test measuring time:
     println!("Time: {:?} using chrono::offset::Local::now()", chrono::offset::Local::now());

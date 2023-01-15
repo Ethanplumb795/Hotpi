@@ -33,7 +33,7 @@ def setupMeasurement():
         f = open("measurements/" + measurement_setup_dictionary["meas_name"] + ".csv", "w")
         f.write(str(measurement_setup_dictionary["meas_freq"]) + ","
                 + str(measurement_setup_dictionary["num_avgs"]) + ","
-                + str(measurement_setup_dictionary["duration"]) + "\n")
+                + str(measurement_setup_dictionary["duration"]) )
         f.close()
 
         #measurement_control(measurement_setup_dictionary)
