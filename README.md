@@ -16,4 +16,5 @@
 
 		CS: Ss0=GPIO8 (pin 24), Ss1=GPIO7 (pin 26)
 
-3. ...
+3. Test flask app and see if everything works as expected:
+	command to run is `flask --app __init__.py run --host=0.0.0.0`
